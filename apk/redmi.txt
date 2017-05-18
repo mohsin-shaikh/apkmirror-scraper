@@ -1,0 +1,88 @@
+
+6
+down vote
+favorite
+4
+I have a php/mysql site in which I am trying to download a comma delimited file (CSV). The csv file I create contains comma delimited data (name, address, city, state). I create the csv file ok and place it in the site's /downloads directory. So far so good. I have been looking on line and the code to trigger the browser's download prompt that I see the most often is:
+
+$path = $_SERVER['DOCUMENT_ROOT'];
+$exportfile = "emailclientaddresses.csv";
+$fullpath = "downloads/" . $exportfile;
+header("Content-type: text/plain");
+header("Content-Length: ".filesize($exportfile));
+header("Content-Disposition: attachment; filename=" . $fullpath);
+The $exportfile is the csv file that my code created. It's ok. What this does is:
+
+The $fullpath is displayed in the browser download prompt in a very weird format: download_emailclientaddresses.csv
+When it does download, the current webpage is downloaded or a combination of the csv file and the current web page.
+OK, I have tried a lot of things and nothing has worked. So, if anyone can help me I would appreciate it. Thank you.
+
+ed Cohen
+
+php mysql browser download prompt
+shareedit
+asked Jul 3 '12 at 17:19
+
+Ed Cohen
+34113
+  	 	
+Why did you not except the answer for @Anne as the correct answer, since it is? – Llewellyn Nov 22 '15 at 22:20
+add a comment
+1 Answer
+active oldest votes
+up vote
+25
+down vote
+The PHP documentation provides a nice example:
+
+<?php
+$file = 'monkey.gif';
+
+if (file_exists($file)) {
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename='.basename($file));
+    header('Content-Transfer-Encoding: binary');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($file));
+    ob_clean();
+    flush();
+    readfile($file);
+    exit;
+}
+?>
+EDIT (Response to comment, explanation)
+
+header('Content-Description: File Transfer');
+Do not display in the browser, but transfer the file.
+
+header('Content-Type: application/octet-stream');
+header('Content-Transfer-Encoding: binary');
+File is a binary file.
+Browsers generally download binary files, unless they can display them.
+
+header('Content-Disposition: attachment; filename='.basename($file));
+Make the download dialog show the proper file name.
+Note: You can use any file name.
+
+header('Expires: 0');
+header('Cache-Control: must-revalidate');
+header('Pragma: public');
+File should not be cached by the browser.
+Cache could cause trouble in case of dynamic content.
+
+header('Content-Length: ' . filesize($file));
+Send the correct file size to the browser,
+otherwise the browser is unable to estimate the transfer-time.
+
+ob_clean();
+flush();
+Make sure the headers are send to the browser before the download starts.
+
+readfile($file);
+Send the file to the browser.
+
+exit;
+Done :)
